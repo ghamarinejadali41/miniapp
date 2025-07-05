@@ -1,14 +1,13 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const fetch = require("node-fetch"); // نصب: npm install node-fetch
+const fetch = require("node-fetch");
 const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // تنظیمات
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json()); // برای دریافت JSON از فرانت
+app.use(bodyParser.json());
 app.use(express.static("public"));
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "html");
@@ -19,43 +18,44 @@ app.get("/", (req, res) => {
   res.render("index");
 });
 
-// ارسال اطلاعات به ربات بله
+// ارسال اطلاعات به بات بله
 app.post("/submit", async (req, res) => {
-  const { name, phone, user_id } = req.body;
-
-  // بررسی مقدار user_id
-  if (!user_id) {
-    return res.status(400).send("❌ شناسه کاربر (user_id) یافت نشد. لطفاً از داخل اپ بله وارد شوید.");
-  }
-
+  const { name, phone, userId, username, timestamp, userAgent } = req.body;
   const token = "129502936:SyFzkkYph1sV62lPeTpFmUJ2l2yy9rzZGo7JVbXq";
-  const message = `👤 نام: ${name}\n📱 شماره موبایل: ${phone}\n🆔 ID کاربر: ${user_id}`;
+  const chatId = "1705369276"; // جایگزین با آی‌دی خودت
+
+  const message = `
+📥 اطلاعات دریافتی از مینی‌اپ بله:
+👤 نام: ${name}
+📱 موبایل: ${phone}
+🆔 یوزر ID: ${userId}
+💬 یوزرنیم: @${username}
+🕓 زمان: ${timestamp}
+🌐 مرورگر: ${userAgent}
+  `;
 
   try {
     const response = await fetch(`https://tapi.bale.ai/bot${token}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        chat_id: user_id,
+        chat_id: chatId,
         text: message,
       }),
     });
 
     const data = await response.json();
-    console.log("Bale response:", data);
-
     if (data.ok) {
-      res.send("✅ اطلاعات با موفقیت ارسال شد.");
+      res.send("✅ اطلاعات با موفقیت به بات ارسال شد.");
     } else {
-      res.status(500).send("❌ خطا در ارسال پیام به بات بله.");
+      res.send("❌ خطا در ارسال پیام به بات.");
     }
-  } catch (error) {
-    console.error("Error sending message to Bale:", error.message);
-    res.status(500).send("❌ خطای اتصال به سرور بله.");
+  } catch (err) {
+    console.error(err);
+    res.send("❌ خطای سرور.");
   }
 });
 
-// اجرا
 app.listen(PORT, () => {
-  console.log(`✅ Server is running on http://localhost:${PORT}`);
+  console.log(`✅ Server running at http://localhost:${PORT}`);
 });

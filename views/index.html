@@ -1,61 +1,84 @@
 <!DOCTYPE html>
 <html lang="fa">
 <head>
-  <meta charset="UTF-8">
-  <title>مینی‌اپ بله</title>
-  <script src="https://miniapp.bale.ai/js/miniapp.js"></script>
+  <meta charset="UTF-8" />
+  <title>فرم مینی‌اپ بله</title>
   <style>
     body {
       font-family: sans-serif;
-      text-align: center;
-      padding: 2rem;
+      background: #f2f2f2;
+      padding: 20px;
+    }
+    form {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 400px;
+      margin: auto;
     }
     input, button {
-      padding: 0.5rem;
-      margin: 0.5rem;
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #2e89ff;
+      color: white;
+      border: none;
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
-  <h2>ورود اطلاعات</h2>
-
-  <form id="user-form">
-    <input type="text" id="name" placeholder="نام" required><br>
-    <input type="text" id="phone" placeholder="شماره موبایل" required><br>
+  <form id="userForm">
+    <h2>فرم اطلاعات</h2>
+    <input type="text" name="name" placeholder="نام" required />
+    <input type="text" name="phone" placeholder="شماره موبایل" required />
     <button type="submit">ارسال</button>
   </form>
 
-  <p id="status"></p>
-
   <script>
-    let baleUserId = null;
-
-    // وقتی داده از بله رسید
-    window.BaleMiniApp.onReady((data) => {
-      baleUserId = data.user.id;
-      console.log("Bale user id:", baleUserId);
-    });
-
-    document.getElementById('user-form').addEventListener('submit', async function (e) {
+    document.getElementById("userForm").addEventListener("submit", async function (e) {
       e.preventDefault();
 
-      const name = document.getElementById('name').value;
-      const phone = document.getElementById('phone').value;
+      const name = this.name.value;
+      const phone = this.phone.value;
+      const userAgent = navigator.userAgent;
+      const timestamp = new Date().toLocaleString('fa-IR');
 
-      const response = await fetch('/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name,
-          phone,
-          user_id: baleUserId
-        })
+      let userId = "نامشخص";
+      let username = "نامشخص";
+
+      // گرفتن اطلاعات از BaleMiniApp SDK
+      if (window.BaleMiniApp) {
+        try {
+          const user = await BaleMiniApp.getUserInfo();
+          userId = user.id;
+          username = user.username || "ندارد";
+        } catch (err) {
+          console.error("خطا در دریافت اطلاعات از بله:", err);
+        }
+      }
+
+      const payload = {
+        name,
+        phone,
+        userId,
+        username,
+        timestamp,
+        userAgent,
+      };
+
+      // ارسال به سرور Node.js
+      const res = await fetch("/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
-      const text = await response.text();
-      document.getElementById('status').innerText = text;
+      const result = await res.text();
+      alert(result);
     });
   </script>
 </body>
