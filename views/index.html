@@ -2,84 +2,110 @@
 <html lang="fa">
 <head>
   <meta charset="UTF-8" />
-  <title>فرم مینی‌اپ بله</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>مینی‌اپ بله - ارسال اطلاعات</title>
   <style>
     body {
-      font-family: sans-serif;
-      background: #f2f2f2;
-      padding: 20px;
+      font-family: Tahoma, sans-serif;
+      background-color: #f0f0f0;
+      padding: 30px;
+      direction: rtl;
     }
-    form {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 400px;
+    .form-box {
+      max-width: 500px;
+      background: #fff;
+      padding: 25px;
       margin: auto;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
     }
-    input, button {
+    .form-box h2 {
+      margin-bottom: 20px;
+    }
+    label {
+      font-weight: bold;
+    }
+    input {
       width: 100%;
       padding: 10px;
-      margin-top: 10px;
-      font-size: 16px;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
     }
     button {
-      background-color: #2e89ff;
-      color: white;
+      background-color: #00a98f;
+      color: #fff;
+      padding: 12px 20px;
       border: none;
-      border-radius: 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 16px;
+    }
+    .user-info {
+      margin-top: 20px;
+      background: #e0f7f1;
+      padding: 10px;
+      border-radius: 8px;
+      display: none;
     }
   </style>
 </head>
 <body>
-  <form id="userForm">
-    <h2>فرم اطلاعات</h2>
-    <input type="text" name="name" placeholder="نام" required />
-    <input type="text" name="phone" placeholder="شماره موبایل" required />
-    <button type="submit">ارسال</button>
-  </form>
+  <div class="form-box">
+    <h2>📤 ارسال اطلاعات به بات بله</h2>
 
+    <form action="/submit" method="POST">
+      <label for="name">نام شما:</label>
+      <input type="text" name="name" required />
+
+      <label for="phone">شماره موبایل:</label>
+      <input type="text" name="phone" required />
+
+      <!-- فیلدهای مخفی برای ارسال اطلاعات از مینی‌اپ -->
+      <input type="hidden" name="user_id" id="userId" />
+      <input type="hidden" name="username" id="username" />
+      <input type="hidden" name="first_name" id="firstName" />
+
+      <button type="submit">📤 ارسال اطلاعات</button>
+    </form>
+
+    <!-- نمایش اطلاعات کاربر -->
+    <div id="userInfoBox" class="user-info">
+      <strong>🧾 اطلاعات شما:</strong>
+      <p id="displayUserId">در حال دریافت...</p>
+      <p id="displayUsername"></p>
+      <p id="displayFirstName"></p>
+    </div>
+  </div>
+
+  <script src="https://miniapp.bale.ai/sdk/sdk.js"></script>
   <script>
-    document.getElementById("userForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
+    window.onload = function () {
+      if (window.baleMiniApp && baleMiniApp.getUserInfo) {
+        baleMiniApp.getUserInfo()
+          .then((user) => {
+            // ست کردن در hidden inputها
+            document.getElementById("userId").value = user.user_id || "";
+            document.getElementById("username").value = user.username || "";
+            document.getElementById("firstName").value = user.first_name || "";
 
-      const name = this.name.value;
-      const phone = this.phone.value;
-      const userAgent = navigator.userAgent;
-      const timestamp = new Date().toLocaleString('fa-IR');
+            // نمایش برای کاربر
+            document.getElementById("displayUserId").innerText = "🆔 آیدی: " + (user.user_id || "نامشخص");
+            document.getElementById("displayUsername").innerText = "👤 نام کاربری: " + (user.username || "نامشخص");
+            document.getElementById("displayFirstName").innerText = "📝 نام نمایشی: " + (user.first_name || "نامشخص");
 
-      let userId = "نامشخص";
-      let username = "نامشخص";
-
-      // گرفتن اطلاعات از BaleMiniApp SDK
-      if (window.BaleMiniApp) {
-        try {
-          const user = await BaleMiniApp.getUserInfo();
-          userId = user.id;
-          username = user.username || "ندارد";
-        } catch (err) {
-          console.error("خطا در دریافت اطلاعات از بله:", err);
-        }
+            document.getElementById("userInfoBox").style.display = "block";
+          })
+          .catch((err) => {
+            document.getElementById("displayUserId").innerText = "❌ خطا در دریافت اطلاعات کاربر.";
+            console.error("خطا در دریافت کاربر:", err);
+          });
+      } else {
+        document.getElementById("displayUserId").innerText = "❗ این صفحه فقط در مینی‌اپ بله اجرا می‌شود.";
       }
-
-      const payload = {
-        name,
-        phone,
-        userId,
-        username,
-        timestamp,
-        userAgent,
-      };
-
-      // ارسال به سرور Node.js
-      const res = await fetch("/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await res.text();
-      alert(result);
-    });
+    };
   </script>
 </body>
 </html>

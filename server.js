@@ -7,7 +7,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // تنظیمات
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "html");
@@ -18,21 +18,22 @@ app.get("/", (req, res) => {
   res.render("index");
 });
 
-// ارسال اطلاعات به بات بله
+// دریافت اطلاعات از فرم و ارسال به بات بله
 app.post("/submit", async (req, res) => {
-  const { name, phone, userId, username, timestamp, userAgent } = req.body;
-  const token = "129502936:SyFzkkYph1sV62lPeTpFmUJ2l2yy9rzZGo7JVbXq";
-  const chatId = "1705369276"; // جایگزین با آی‌دی خودت
+  const { name, phone, user_id, username, first_name } = req.body;
 
   const message = `
-📥 اطلاعات دریافتی از مینی‌اپ بله:
-👤 نام: ${name}
-📱 موبایل: ${phone}
-🆔 یوزر ID: ${userId}
-💬 یوزرنیم: @${username}
-🕓 زمان: ${timestamp}
-🌐 مرورگر: ${userAgent}
-  `;
+📩 اطلاعات جدید از مینی‌اپ بله:
+👤 نام وارد شده: ${name}
+📱 شماره موبایل: ${phone}
+🆔 آیدی کاربر: ${user_id}
+👨‍💻 نام کاربری: ${username}
+📝 نام نمایشی: ${first_name}
+⏱ زمان: ${new Date().toLocaleString("fa-IR")}
+`;
+
+  const token = "129502936:SyFzkkYph1sV62lPeTpFmUJ2l2yy9rzZGo7JVbXq";
+  const chatId = "1705369276";
 
   try {
     const response = await fetch(`https://tapi.bale.ai/bot${token}/sendMessage`, {
@@ -52,10 +53,10 @@ app.post("/submit", async (req, res) => {
     }
   } catch (err) {
     console.error(err);
-    res.send("❌ خطای سرور.");
+    res.send("❌ خطای اتصال به سرور.");
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
